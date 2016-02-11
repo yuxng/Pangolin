@@ -3,4 +3,6 @@ if(BUILD_PANGOLIN_GUI AND BUILD_PANGOLIN_VARS )
       add_subdirectory(VideoViewer)
       add_subdirectory(VideoConvert)
   endif()
+
+  add_subdirectory(ModelViewer)
 endif()
