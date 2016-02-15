@@ -33,76 +33,48 @@
 namespace pangolin
 {
 
-class GeometryBuffer
+struct GeometryBufferData
 {
-public:
-    GeometryBuffer()
-        : buffer_type(0), num_elements(0), datatype(0), count_per_element(0), gluse(0), data(0)
+    GeometryBufferData()
+        : buffer_type(pangolin::GlUndefined), gluse(0)
     {
     }
 
-    GeometryBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW )
+    GeometryBufferData(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse = GL_DYNAMIC_DRAW )
+        : buffer_type(buffer_type), gluse(gluse)
     {
-        Reinitialise(buffer_type, num_elements, datatype, count_per_element, gluse);
+        data.resize(size_bytes);
     }
 
 #ifdef CALLEE_HAS_RVALREF
     //! Move Constructor
-    GeometryBuffer(GeometryBuffer&& other)
-        : buffer_type(other.buffer_type), num_elements(other.num_elements),
-          datatype(other.datatype), count_per_element(other.count_per_element),
-          gluse(other.gluse), data(other.data)
+    GeometryBufferData(GeometryBufferData&& o)
+        : buffer_type(o.buffer_type), gluse(o.gluse), data(std::move(o.data))
     {
-        other.data = 0;
     }
 #endif
 
     void Clear()
     {
-        if(data) {
-            delete[] data;
-        }
+        data.clear();
     }
 
-    void Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse = GL_DYNAMIC_DRAW )
+    unsigned char* Data()
     {
-        Clear();
-        this->buffer_type = buffer_type;
-        this->num_elements = num_elements;
-        this->datatype = datatype;
-        this->count_per_element = count_per_element;
-        this->gluse = gluse;
+        return data.data();
     }
 
-    void OwnData(void* data)
+    GlBufferData CreateGlBuffer() const
     {
-        Clear();
-        this->data = data;
-    }
-
-    ~GeometryBuffer()
-    {
-        Clear();
-    }
-
-    GlBuffer CreateGlBuffer() const
-    {
-        GlBuffer glbuf(buffer_type, num_elements, datatype, count_per_element, gluse);
-        size_t size_bytes = num_elements * count_per_element * GlDataTypeBytes(datatype);
-        glbuf.Upload(data, size_bytes);
-        return glbuf;
+        return GlBufferData(buffer_type, data.size(), gluse, data.data());
     }
 
     GlBufferType buffer_type;
-    GLuint num_elements;
-    GLenum datatype;
-    GLuint count_per_element;
     GLenum gluse;
-    void* data;
-
+    std::vector<unsigned char> data;
 private:
     // Private copy constructor
-    GeometryBuffer(const GeometryBuffer&) {}
+    GeometryBufferData(const GeometryBufferData&) {}
 };
 
 }
