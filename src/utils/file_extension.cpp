@@ -59,6 +59,7 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
         const unsigned char magic_tiff2[] = "\x4D\x4D\x00\x2A";
         const unsigned char magic_exr[]   = "\x76\x2F\x31\x01";
         const unsigned char magic_pango[] = "PANGO";
+        const unsigned char magic_ply[]   = "ply";
 
         if( !strncmp((char*)data, (char*)magic_png, 8) ) {
             return ImageFileTypePng;
@@ -75,6 +76,8 @@ ImageFileType FileTypeMagic(const unsigned char data[], size_t bytes)
             return ImageFileTypeExr;
         }else if( !strncmp((char*)data, (char*)magic_pango,5) ) {
             return ImageFileTypePango;
+        }else if( !strncmp((char*)data, (char*)magic_ply, 3) ) {
+            return ImageFileTypePly;
         }else if( data[0] == 'P' && '0' < data[1] && data[1] < '9') {
             return ImageFileTypePpm;
         }
@@ -102,6 +105,8 @@ ImageFileType FileTypeExtension(const std::string& ext)
         return ImageFileTypePvn;
     } else if( ext == ".pango"  ) {
         return ImageFileTypePango;
+    } else if( ext == ".ply"  ) {
+        return ImageFileTypePly;
     } else {
         return ImageFileTypeUnknown;
     }
