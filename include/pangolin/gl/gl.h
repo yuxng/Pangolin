@@ -164,6 +164,7 @@ struct PANGOLIN_EXPORT GlFramebuffer
 
 enum GlBufferType
 {
+    GlUndefined = 0,
     GlArrayBuffer = GL_ARRAY_BUFFER,                    // VBO's, CBO's, NBO's
     GlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,     // IBO's
 #ifndef HAVE_GLES
@@ -172,7 +173,40 @@ enum GlBufferType
 #endif
 };
 
-struct PANGOLIN_EXPORT GlBuffer
+// This encapsulates a GL Buffer object.
+struct PANGOLIN_EXPORT GlBufferData
+{
+    //! Default constructor represents 'no buffer'
+    GlBufferData();
+    GlBufferData(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse = GL_DYNAMIC_DRAW, const unsigned char* data = 0 );
+
+#ifdef CALLEE_HAS_RVALREF
+    //! Move Constructor
+    GlBufferData(GlBufferData&& tex);
+#endif
+
+    virtual ~GlBufferData();
+
+    bool IsValid() const;
+
+    void Reinitialise(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse = GL_DYNAMIC_DRAW, const unsigned char* data = 0 );
+
+    void Bind() const;
+    void Unbind() const;
+    void Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset = 0);
+
+    GLuint bo;
+    GlBufferType buffer_type;
+    GLenum gluse;
+    GLuint size_bytes;
+
+private:
+    GlBufferData(const GlBufferData&) {}
+};
+
+// This encapsulates a GL Buffer object, also storing information about its contents.
+// You should try to use GlBufferData instead.
+struct PANGOLIN_EXPORT GlBuffer : public GlBufferData
 {
     //! Default constructor represents 'no buffer'
     GlBuffer();
@@ -183,21 +217,9 @@ struct PANGOLIN_EXPORT GlBuffer
     GlBuffer(GlBuffer&& tex);
 #endif  
     
-    ~GlBuffer();
-
-    bool IsValid() const;
-    
     void Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse );
     void Resize(GLuint num_elements);
-    
-    void Bind() const;
-    void Unbind() const;
-    void Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset = 0);
-    
-    GLuint bo;
-    GlBufferType buffer_type;
-    GLenum gluse;
-    
+            
     GLenum datatype;
     GLuint num_elements;
     GLuint count_per_element;

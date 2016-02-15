@@ -521,46 +521,105 @@ inline void GlFramebuffer::AttachDepth(GlRenderBuffer& rb )
 
 ////////////////////////////////////////////////////////////////////////////
 
-inline GlBuffer::GlBuffer()
-    : bo(0), num_elements(0)
+inline GlBufferData::GlBufferData()
+    : bo(0)
 {
 }
 
-inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
-    : bo(0), num_elements(0)
+inline GlBufferData::GlBufferData(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse, const unsigned char* data )
+    : bo(0)
 {
-    Reinitialise(buffer_type, num_elements, datatype, count_per_element, gluse );
+    Reinitialise(buffer_type, size_bytes, gluse, data );
 }
 
 #ifdef CALLEE_HAS_RVALREF
-inline GlBuffer::GlBuffer(GlBuffer&& buffer)
-    : bo(buffer.bo), buffer_type(buffer.buffer_type), gluse(buffer.gluse), datatype(buffer.datatype),
-      num_elements(buffer.num_elements), count_per_element(buffer.count_per_element)
+inline GlBufferData::GlBufferData(GlBufferData&& o)
+    : bo(o.bo), buffer_type(o.buffer_type), gluse(o.gluse), size_bytes(o.size_bytes)
 {
-    buffer.bo = 0;
+    o.bo = 0;
 }
 #endif
 
-inline bool GlBuffer::IsValid() const
+inline bool GlBufferData::IsValid() const
 {
     return bo != 0;
 }
 
-inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
+inline void GlBufferData::Reinitialise(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse, const unsigned char* data )
 {
     this->buffer_type = buffer_type;
+    this->size_bytes = size_bytes;
     this->gluse = gluse;
-    this->datatype = datatype;
-    this->num_elements = num_elements;
-    this->count_per_element = count_per_element;
 
     if(!bo) {
         glGenBuffers(1, &bo);
     }
 
     Bind();
-    glBufferData(buffer_type, num_elements*GlDataTypeBytes(datatype)*count_per_element, 0, gluse);
+    glBufferData(buffer_type, size_bytes, data, gluse);
     Unbind();
+}
+
+inline GlBufferData::~GlBufferData()
+{
+    if(bo!=0) {
+        glDeleteBuffers(1, &bo);
+    }
+}
+
+inline void GlBufferData::Bind() const
+{
+    glBindBuffer(buffer_type, bo);
+}
+
+inline void GlBufferData::Unbind() const
+{
+    glBindBuffer(buffer_type, 0);
+}
+
+inline void GlBufferData::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset)
+{
+    if(offset + size_bytes > this->size_bytes) {
+        throw std::runtime_error("GlBufferData: Trying to upload past capacity.");
+    }
+
+    Bind();
+    glBufferSubData(buffer_type,offset,size_bytes,data);
+    Unbind();
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+inline GlBuffer::GlBuffer()
+    : GlBufferData(), num_elements(0)
+{
+}
+
+inline GlBuffer::GlBuffer(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
+    : GlBufferData(buffer_type, num_elements * count_per_element * GlDataTypeBytes(datatype), gluse),
+      datatype(datatype), num_elements(num_elements), count_per_element(count_per_element)
+{
+}
+
+#ifdef CALLEE_HAS_RVALREF
+inline GlBuffer::GlBuffer(GlBuffer&& o)
+    : datatype(o.datatype), num_elements(o.num_elements), count_per_element(o.count_per_element)
+{
+    bo = o.bo;
+    buffer_type = o.buffer_type;
+    gluse = o.gluse;
+    size_bytes = o.size_bytes;
+    o.bo = 0;
+}
+#endif
+
+inline void GlBuffer::Reinitialise(GlBufferType buffer_type, GLuint num_elements, GLenum datatype, GLuint count_per_element, GLenum gluse )
+{
+    this->datatype = datatype;
+    this->num_elements = num_elements;
+    this->count_per_element = count_per_element;
+    const GLuint size_bytes = num_elements * count_per_element * GlDataTypeBytes(datatype);
+    GlBufferData::Reinitialise(buffer_type, size_bytes, gluse);
 }
 
 inline void GlBuffer::Resize(GLuint new_num_elements)
@@ -584,30 +643,6 @@ inline void GlBuffer::Resize(GLuint new_num_elements)
         Reinitialise(buffer_type, new_num_elements, datatype, count_per_element, gluse);
     }
     num_elements = new_num_elements;
-}
-
-inline GlBuffer::~GlBuffer()
-{
-    if(bo!=0) {
-        glDeleteBuffers(1, &bo);
-    }
-}
-
-inline void GlBuffer::Bind() const
-{
-    glBindBuffer(buffer_type, bo);
-}
-
-inline void GlBuffer::Unbind() const
-{
-    glBindBuffer(buffer_type, 0);
-}
-
-inline void GlBuffer::Upload(const GLvoid* data, GLsizeiptr size_bytes, GLintptr offset)
-{
-    Bind();
-    glBufferSubData(buffer_type,offset,size_bytes, data);
-    Unbind();
 }
 
 ////////////////////////////////////////////////////////////////////////////
