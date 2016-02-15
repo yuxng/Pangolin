@@ -45,6 +45,7 @@ enum ImageFileType
     ImageFileTypeExr,
     ImageFileTypePango,
     ImageFileTypePvn,
+    ImageFileTypePly,
     ImageFileTypeUnknown
 };
 
