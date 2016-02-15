@@ -29,16 +29,40 @@
 #define PANGOLIN_GEOMETRY_H
 
 #include <map>
+#include <vector>
 
 #include <pangolin/geometry/geometry_buffer.h>
 
 namespace pangolin
 {
 
-class GlGeometry
+struct GeometryAttrib
 {
-public:
-    std::map<std::string, GlBuffer> buffers;
+    GLuint index;
+    GLint size;
+    GLenum type;
+    GLboolean normalized;
+    GLsizei stride;
+    GLvoid* pointer;
+};
+
+struct Geometry
+{
+    struct Buffer {
+        GeometryBufferData host;
+        GlBufferData gl;
+    };
+
+    Geometry()
+    {
+        // Try to prevent reallocations by reserving some space.
+        buffers.reserve(10);
+    }
+
+
+
+    std::vector<Buffer> buffers;
+    std::map<std::string, GeometryAttrib> attribs;
 };
 
 

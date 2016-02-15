@@ -1,7 +1,11 @@
 #include <pangolin/pangolin.h>
 #include <pangolin/geometry/geometry.h>
 #include <pangolin/gl/glsl.h>
+#include <pangolin/gl/glvbo.h>
+
 #include <pangolin/utils/file_utils.h>
+
+#include "GeometryPly.h"
 
 int main( int argc, char** argv )
 {
@@ -28,12 +32,13 @@ int main( int argc, char** argv )
             .SetBounds(0.0, 1.0, 0.0, 1.0, -640.0f/480.0f)
             .SetHandler(&handler);
 
-    pangolin::GlGeometry geometry = pangolin::LoadGeometry(model_filename);
+    pangolin::Geometry geometry = pangolin::LoadGeometry(model_filename);
+    return 0;
 
     pangolin::GlSlProgram prog;
     prog.AddShaderFromFile(pangolin::GlSlVertexShader,   filename_vertshader);
     prog.AddShaderFromFile(pangolin::GlSlFragmentShader, filename_fragshader);
-    prog.BindPangolinDefaultAttribLocationsAndLink();
+    prog.Link();
 
     while( !pangolin::ShouldQuit() )
     {
@@ -42,13 +47,30 @@ int main( int argc, char** argv )
         d_cam.Activate(s_cam);
 
         prog.Bind();
-        prog.SetUniform("T_wc",  s_cam.GetModelViewMatrix());
-        prog.SetUniform("KT_wc", s_cam.GetProjectionModelViewMatrix();
-        prog.SetUniform("K",     s_cam.GetProjectionMatrix());
+        prog.SetUniform("T_wc",  s_cam.GetModelViewMatrix() );
+        prog.SetUniform("KT_wc", s_cam.GetProjectionModelViewMatrix() );
+        prog.SetUniform("K",     s_cam.GetProjectionMatrix() );
 
-        for(int i=0; i < geometry.buffers.size(); ++i) {
+//        // Enable attribs
+//        for(auto& kv : geometry.attribs) {
+//            const std::string& attrib_name = kv.first;
+//            pangolin::GeometryAttrib& a = kv.second;
+//            pangolin::GlBufferData& b = geometry.glbuffers[a.index];
+//            GLint attrib = prog.GetAttributeHandle(attrib_name);
 
-        }
+//            b.Bind();
+//            glVertexAttribPointer(attrib, a.size, a.type, a.normalized, a.stride, a.pointer);
+//            glEnableVertexAttribArray(attrib);
+//        }
+
+//        // Render points
+
+//        // Disable attribs
+//        for(auto& kv : geometry.attribs) {
+//            const std::string& attrib_name = kv.first;
+//            GLint attrib = prog.GetAttributeHandle(attrib_name);
+//            glDisableVertexAttribArray(attrib);
+//        }
 
         // Swap frames and Process Events
         pangolin::FinishFrame();
