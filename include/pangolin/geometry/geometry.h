@@ -39,7 +39,7 @@ namespace pangolin
 struct GeometryAttrib
 {
     GLuint index;
-    GLint size;
+    GLint num_items;
     GLenum type;
     GLboolean normalized;
     GLsizei stride;
@@ -48,20 +48,33 @@ struct GeometryAttrib
 
 struct Geometry
 {
-    struct Buffer {
-        GeometryBufferData host;
-        GlBufferData gl;
-    };
-
     Geometry()
     {
-        // Try to prevent reallocations by reserving some space.
         buffers.reserve(10);
     }
 
+    inline void PushSwap(GeometryBufferData& b)
+    {
+        buffers.push_back( GeometryBufferData(b.buffer_type, 0, b.gluse) );
+        std::swap(buffers.back().data, b.data);
+    }
 
+    std::vector<GeometryBufferData> buffers;
+    std::map<std::string, GeometryAttrib> attribs;
+};
 
-    std::vector<Buffer> buffers;
+struct GlGeometry
+{
+    GlGeometry(const Geometry& geom)
+        : attribs(geom.attribs)
+    {
+        buffers.resize(geom.buffers.size());
+        for(int i=0; i < buffers.size(); ++i) {
+            geom.buffers[i].CopyTo(buffers[i]);
+        }
+    }
+
+    std::vector<GlBufferData> buffers;
     std::map<std::string, GeometryAttrib> attribs;
 };
 
