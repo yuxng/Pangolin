@@ -54,19 +54,14 @@ struct GeometryBufferData
     }
 #endif
 
-    void Clear()
-    {
-        data.clear();
-    }
-
     unsigned char* Data()
     {
         return data.data();
     }
 
-    GlBufferData CreateGlBuffer() const
+    void CopyTo(GlBufferData& b) const
     {
-        return GlBufferData(buffer_type, data.size(), gluse, data.data());
+        b.Reinitialise(buffer_type, data.size(), gluse, data.data());
     }
 
     GlBufferType buffer_type;
