@@ -59,8 +59,10 @@ struct X11Display
 
 struct X11GlContext : public GlContextInterface
 {
-    X11GlContext(X11Display& d, ::GLXFBConfig chosenFbc, boostd::shared_ptr<X11GlContext> shared_context = boostd::shared_ptr<X11GlContext>() );
+    X11GlContext(boostd::shared_ptr<X11Display> &d, ::GLXFBConfig chosenFbc, boostd::shared_ptr<X11GlContext> shared_context = boostd::shared_ptr<X11GlContext>() );
     ~X11GlContext();
+
+    boostd::shared_ptr<X11Display> display;
 
     boostd::shared_ptr<X11GlContext> shared_context;
 
@@ -72,7 +74,7 @@ struct X11Window : public PangolinGl
 {
     X11Window(
         const std::string& title, int width, int height,
-        ::Display* display, ::GLXFBConfig chosenFbc
+        boostd::shared_ptr<X11Display>& display, ::GLXFBConfig chosenFbc
     );
 
     ~X11Window();
@@ -88,8 +90,8 @@ struct X11Window : public PangolinGl
     void ProcessEvents() PANGOLIN_OVERRIDE;
 
     // References the X11 display and context.
-    ::Display *display;
-    ::GLXContext glcontext;
+    boostd::shared_ptr<X11Display> display;
+    boostd::shared_ptr<X11GlContext> glcontext;
 
     // Owns the X11 Window and Colourmap
     ::Window win;
