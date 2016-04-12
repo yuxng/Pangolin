@@ -22,9 +22,9 @@ if(BUILD_PANGOLIN_GUI)
         add_subdirectory(SimpleRepeatVideo)
       endif()
 
-#      if(Oculus_FOUND)
-#        add_subdirectory(SimpleOculus)
-#      endif()
+      if(Oculus_FOUND)
+        add_subdirectory(SimpleOculus)
+      endif()
 
 #      This sample fails on many platforms, so exclude it for now,
 #      until we can create a better cmake test for support.

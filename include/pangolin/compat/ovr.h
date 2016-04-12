@@ -36,5 +36,6 @@
 #endif
 
 #include <OVR.h>
+#include <Extras/OVR_Math.h>
 
 #endif // PANGOLIN_COMPAT_OVR_H
