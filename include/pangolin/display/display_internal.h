@@ -109,6 +109,16 @@ struct PANGOLIN_EXPORT PangolinGl : public WindowInterface
     virtual void MakeCurrent() PANGOLIN_OVERRIDE {
         pango_print_warn("MakeCurrent: Not available with non-pangolin window.\n");
     }
+
+    virtual void Move(int /*x*/, int /*y*/) PANGOLIN_OVERRIDE {
+        pango_print_warn("Move: Not available with non-pangolin window.\n");
+    }
+
+    virtual void Resize(unsigned int /*w*/, unsigned int /*h*/) PANGOLIN_OVERRIDE {
+        pango_print_warn("Resize: Not available with non-pangolin window.\n");
+    }
+
+
 };
 
 void AddNewContext(const std::string& name, boostd::shared_ptr<PangolinGl> newcontext);

@@ -81,6 +81,10 @@ struct X11Window : public PangolinGl
 
     void ToggleFullscreen() PANGOLIN_OVERRIDE;
 
+    void Move(int x, int y) PANGOLIN_OVERRIDE;
+
+    void Resize(unsigned int w, unsigned int h) PANGOLIN_OVERRIDE;
+
     void MakeCurrent(GLXContext ctx);
 
     void MakeCurrent() PANGOLIN_OVERRIDE;

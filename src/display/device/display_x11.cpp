@@ -324,6 +324,16 @@ void X11Window::ToggleFullscreen()
     XMoveResizeWindow(display->display, win, 0, 0, windowed_size[0], windowed_size[1]);
 }
 
+void X11Window::Move(int x, int y)
+{
+    XMoveWindow(display->display, win, x, y);
+}
+
+void X11Window::Resize(unsigned int w, unsigned int h)
+{
+    XResizeWindow(display->display, win, w, h);
+}
+
 void X11Window::ProcessEvents()
 {
     XEvent ev;

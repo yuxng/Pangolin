@@ -43,6 +43,8 @@ public:
     virtual ~WindowInterface() {}
 
     virtual void ToggleFullscreen() = 0;
+    virtual void Move(int x, int y) = 0;
+    virtual void Resize(unsigned int w, unsigned int h) = 0;
     virtual void MakeCurrent() = 0;
     virtual void ProcessEvents() = 0;
     virtual void SwapBuffers() = 0;
