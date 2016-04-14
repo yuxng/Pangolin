@@ -7,6 +7,7 @@
 #include <OVR_CAPI_GL.h>
 
 #include <pthread.h>
+#include <pangolin/display/device/X11Window.h>
 
 class PangoOculus
 {
@@ -130,6 +131,8 @@ public:
     void RunWithHmd()
     {
         pangolin::WindowInterface& win = pangolin::CreateWindowAndBind( window_title, 10, 10 );
+        pangolin::X11Window& x11win = dynamic_cast<pangolin::X11Window&>(win);
+
         glEnable(GL_DEPTH_TEST);
 
         ovrGLConfig config;
@@ -137,7 +140,7 @@ public:
         config.OGL.Header.BackBufferSize.w = hmd->Resolution.h;
         config.OGL.Header.BackBufferSize.h = hmd->Resolution.w;
         config.OGL.Header.Multisample      = 0;
-        config.OGL.Disp                    = 0;
+        config.OGL.Disp                    = x11win.display->display;
 
         ovrEyeRenderDesc EyeRenderDesc[2];
         ovrHmd_ConfigureRendering( hmd, &config.Config,
@@ -145,8 +148,8 @@ public:
             ovrDistortionCap_Overdrive, hmd->DefaultEyeFov, EyeRenderDesc
         );
 
-        ovrHmd_SetEnabledCaps(hmd, ovrHmdCap_LowPersistence|ovrHmdCap_DynamicPrediction);
-//        ovrHmd_AttachToWindow(HMD, (void*)win, 0, 0);
+        ovrHmd_SetEnabledCaps(hmd, ovrHmdCap_LowPersistence | ovrHmdCap_DynamicPrediction );
+        ovrHmd_AttachToWindow(hmd, (void*)x11win.win, 0, 0);
 
         ovrHmd_ConfigureTracking(
             hmd, ovrTrackingCap_Orientation|ovrTrackingCap_MagYawCorrection| ovrTrackingCap_Position, 0
@@ -165,7 +168,7 @@ public:
         for(unsigned int b=0; b < num_buffers; ++b) {
             buffers[b].Reinitialise(eye_tex_size.w, eye_tex_size.h);
 
-            for(int eye=0; eye<num_eyes; ++eye) {
+            for(unsigned int eye=0; eye<num_eyes; ++eye) {
                 buffers[b].occ_cam.GetViewOffset(eye) = pangolin::OpenGlMatrix( OVR::Matrix4f( T_eh[eye] ) );\
                 buffers[b].occ_cam.GetProjectionMatrix(eye) = pangolin::OpenGlMatrix(ovrMatrix4f_Projection(
                     EyeRenderDesc[eye].Fov, 0.1f, 10.0f, ovrProjection_ClipRangeOpenGL | ovrProjection_RightHanded
@@ -183,18 +186,18 @@ public:
         ovrHmd_DismissHSWDisplay(hmd);
         rendering = true;
         while(should_run) {
-            PangoOculus::OculusStereoBuffer* frame = GetBufferToRender();
-            if(frame) {
-                std::cout << frame->frame_index << std::endl;
-                for(unsigned int eye=0; eye < PangoOculus::num_eyes; ++eye) {
-                    frame->SetupEye(eye);
-                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                    glTranslatef(0,0,-0.5);
-                    pangolin::glDrawColouredCube(-0.1f,0.1f);
-                    frame->Unsetup();
-                }
-                PutBufferToRender(frame);
-            }
+//            PangoOculus::OculusStereoBuffer* frame = GetBufferToRender();
+//            if(frame) {
+//                std::cout << frame->frame_index << std::endl;
+//                for(unsigned int eye=0; eye < PangoOculus::num_eyes; ++eye) {
+//                    frame->SetupEye(eye);
+//                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//                    glTranslatef(0,0,-0.5);
+//                    pangolin::glDrawColouredCube(-0.1f,0.1f);
+//                    frame->Unsetup();
+//                }
+//                PutBufferToRender(frame);
+//            }
 
             OculusStereoBuffer* render_frame = &buffers[render_id];
             ovrHmd_BeginFrame(hmd, render_frame->frame_index);
@@ -273,26 +276,28 @@ void main_new()
 
     while( !pangolin::ShouldQuit() )
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        d_cam.Activate(s_cam);
+        boostd::this_thread::sleep_for(boostd::chrono::milliseconds(60));
 
-        pangolin::glDrawColouredCube();
+//        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//        d_cam.Activate(s_cam);
 
-//        // Submit frame for Oculus;
-//        if(render_stuff) {
-//            PangoOculus::OculusStereoBuffer* frame = oculus.GetBufferToRender();
-//            if(frame) {
+//        pangolin::glDrawColouredCube();
+
+        // Submit frame for Oculus;
+        if(render_stuff) {
+            PangoOculus::OculusStereoBuffer* frame = oculus.GetBufferToRender();
+            if(frame) {
 //                std::cout << frame->frame_index << std::endl;
-//                for(unsigned int eye=0; eye < PangoOculus::num_eyes; ++eye) {
-//                    frame->SetupEye(eye);
-//                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//                    glTranslatef(0,0,-0.5);
-//                    pangolin::glDrawColouredCube(-0.1f,0.1f);
-//                    frame->Unsetup();
-//                }
-//                oculus.PutBufferToRender(frame);
-//            }
-//        }
+                for(unsigned int eye=0; eye < PangoOculus::num_eyes; ++eye) {
+                    frame->SetupEye(eye);
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                    glTranslatef(0,0,-0.5);
+                    pangolin::glDrawColouredCube(-0.1f,0.1f);
+                    frame->Unsetup();
+                }
+                oculus.PutBufferToRender(frame);
+            }
+        }
 
         pangolin::FinishFrame();
     }
@@ -306,8 +311,11 @@ void main_old()
     if(!hmd) {
         throw std::runtime_error("No Oculus headset available.");
     }
+    pangolin::Params win_params;
+    win_params.Set(pangolin::PARAM_DOUBLEBUFFER, false);
+    pangolin::WindowInterface& win = pangolin::CreateWindowAndBind("Oculus", 10, 10, win_params);
+    pangolin::X11Window& x11win = dynamic_cast<pangolin::X11Window&>(win);
 
-    pangolin::WindowInterface& win = pangolin::CreateWindowAndBind("Oculus", 10, 10);
     glEnable(GL_DEPTH_TEST);
 
     ovrGLConfig config;
@@ -315,15 +323,15 @@ void main_old()
     config.OGL.Header.BackBufferSize.w = hmd->Resolution.h;
     config.OGL.Header.BackBufferSize.h = hmd->Resolution.w;
     config.OGL.Header.Multisample      = 0;
-    config.OGL.Disp                    = 0;
+    config.OGL.Disp                    = x11win.display->display;
 
     ovrEyeRenderDesc eyeRenderDesc[2];
     ovrHmd_ConfigureRendering( hmd, &config.Config,
-                               ovrDistortionCap_Vignette | ovrDistortionCap_TimeWarp |
+                               ovrDistortionCap_Vignette | /*ovrDistortionCap_TimeWarp |*/
                                ovrDistortionCap_Overdrive, hmd->DefaultEyeFov, eyeRenderDesc );
 
-    ovrHmd_SetEnabledCaps(hmd, ovrHmdCap_LowPersistence|ovrHmdCap_DynamicPrediction);
-//    ovrHmd_AttachToWindow(HMD, (void*)win, 0, 0);
+    ovrHmd_SetEnabledCaps(hmd, ovrHmdCap_LowPersistence /*| ovrHmdCap_DynamicPrediction*/);
+    ovrHmd_AttachToWindow(hmd, (void*)x11win.win, 0, 0);
 
     ovrHmd_ConfigureTracking(hmd, ovrTrackingCap_Orientation|ovrTrackingCap_MagYawCorrection|
                                   ovrTrackingCap_Position, 0);
@@ -374,18 +382,41 @@ void main_old()
 
     ovrHmd_DismissHSWDisplay(hmd);
 
-    while(!pangolin::ShouldQuit()) {
-        ovrHmd_BeginFrame(hmd, 0);
+    const int w = eye_tex[0].width;
+    const int h = eye_tex[0].height;
+    unsigned char buffer[w*h];
 
-//        ovrTrackingState tracking_state = ovrHmd_GetTrackingState(HMD, 0.0);
-//        OVR::Pose<float> p(tracking_state.HeadPose.ThePose);
+    unsigned int frame = 0;
+    while(!pangolin::ShouldQuit()) {
+//        boostd::this_thread::sleep_for(boostd::chrono::milliseconds(30));
+
+        ovrFrameTiming timing = ovrHmd_BeginFrame(hmd, frame);
+
+        ovrTrackingState tracking_state = ovrHmd_GetTrackingState(hmd, timing.ScanoutMidpointSeconds);
+
 //        OVR::Posef T_hw = OVR::Posef(tracking_state.HeadPose.ThePose).Inverted();
 //        occ_cam.SetModelViewMatrix( pangolin::OpenGlMatrix(OVR::Matrix4f(T_hw)) );
 
         ovrPosef    EyeRenderPose[2];
         ovrVector3f HmdToEyeViewOffset[2] = { eyeRenderDesc[0].HmdToEyeViewOffset, eyeRenderDesc[1].HmdToEyeViewOffset };
-        ovrHmd_GetEyePoses(hmd, 0, HmdToEyeViewOffset, EyeRenderPose, NULL);
+        ovrHmd_GetEyePoses(hmd, frame, HmdToEyeViewOffset, EyeRenderPose, &tracking_state);
 
+//        for(int y=0; y<h; ++y) {
+//            for(int x=0; x<w; ++x) {
+//                double cx = w/2 - EyeRenderPose[0].Position.x * 1000;
+//                double cy = h/2 - EyeRenderPose[0].Position.y * 1000;
+//                double dx = (x - cx);
+//                double dy = (y - cy);
+//                double dist_sq = dx*dx + dy*dy;
+//                unsigned char val = sqrt(dist_sq) < 20 ? 255 : 0;
+//                buffer[w*y + x] = val;
+//            }
+//        }
+
+//        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+//        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+//        eye_tex[0].Upload(buffer, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+//        eye_tex[1].Upload(buffer, GL_LUMINANCE, GL_UNSIGNED_BYTE);
 
         // Render each eye
         for(int eye=0; eye<2; ++eye) {
@@ -413,14 +444,18 @@ void main_old()
 //        ovrHmd_EndFrame(HMD, Pose_w_eye, &eyeTex[0].Texture);
 
         ovrHmd_EndFrame(hmd, EyeRenderPose, &eyeTex[0].Texture);
+        glFlush();
+//        glFinish();
+        ovrHmd_EndFrameTiming(hmd);
+
         win.ProcessEvents();
     }
 }
 
 int main(int /*argc*/, char ** /*argv*/)
 {
-    main_old();
-//    main_new();
+//    main_old();
+    main_new();
     return 0;
 }
 
