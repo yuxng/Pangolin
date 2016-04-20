@@ -90,14 +90,6 @@ public:
         : should_run(false), rendering(false), hmd(0), window_title(window_title), render_id(0)
     {
         occthread = boostd::thread(&PangoOculus::Run, boostd::ref(*this));
-
-        sched_param sch;
-        int policy;
-        pthread_getschedparam(occthread.native_handle(), &policy, &sch);
-        sch.sched_priority = 100;
-        if(pthread_setschedparam(occthread.native_handle(), SCHED_FIFO, &sch)) {
-            pango_print_warn("Failed to set thread priority\n");
-        }
     }
 
     ~PangoOculus()
@@ -106,8 +98,6 @@ public:
         rendering = false;
         occthread.join();
     }
-
-//protected:
 
     void DetectOrSleep()
     {
@@ -174,45 +164,42 @@ public:
 
         const ovrSizei eye_tex_size = ovrHmd_GetFovTextureSize(hmd, (ovrEyeType)0, hmd->DefaultEyeFov[0], 1);
 
+        // RdfVision.inverse() is the identity matrix
+        pangolin::OpenGlMatrix rdfOpenGL; pangolin::SetZero<4,4>(rdfOpenGL.m);
+        rdfOpenGL(0,0) =  1.0f; rdfOpenGL(1,1) = -1.0f; rdfOpenGL(2,2) = -1.0f; rdfOpenGL(3,3) =  1.0f;
+        const pangolin::OpenGlMatrix T_gl_vis = rdfOpenGL /** RdfVision.inverse()*/;
+
         for(unsigned int b=0; b < num_buffers; ++b) {
             buffers[b].Reinitialise(eye_tex_size.w, eye_tex_size.h);
 
             for(unsigned int eye=0; eye<num_eyes; ++eye) {
-                buffers[b].occ_cam.GetViewOffset(eye) = pangolin::OpenGlMatrix( OVR::Matrix4f( T_eh[eye] ) );\
+                buffers[b].occ_cam.GetViewOffset(eye) = T_gl_vis * pangolin::OpenGlMatrix( OVR::Matrix4f( T_eh[eye] ) );
+
                 buffers[b].occ_cam.GetProjectionMatrix(eye) = pangolin::OpenGlMatrix(ovrMatrix4f_Projection(
                     EyeRenderDesc[eye].Fov, 0.1f, 10.0f, ovrProjection_ClipRangeOpenGL | ovrProjection_RightHanded
                 ));
 
-//              buffers[b].occ_cam.GetProjectionMatrix(eye) = pangolin::ProjectionMatrix(
-//                  eye_tex_size[eye].w, eye_tex_size[eye].h,
+//              float focalLength = 600.0;
+//              float lensXOffset = 0.0; //focalLength * 0.06;
+//              buffers[b].occ_cam.GetProjectionMatrix(eye) = pangolin::ProjectionMatrixRDF_TopLeft(
+//                  eye_tex_size.w, eye_tex_size.h,
 //                  focalLength, focalLength,
-//                  eye_tex_size[eye].w/2.0 -(eye*2-1)*lensXOffset, eye_tex_size[eye].h/2.0,
+//                  eye_tex_size.w/2.0 -(eye*2-1)*lensXOffset, eye_tex_size.h/2.0,
 //                  0.2, 100
 //              );
             }
         }
 
-        ovrHmd_DismissHSWDisplay(hmd);
         rendering = true;
-        while(should_run) {
-//            PangoOculus::OculusStereoBuffer* frame = GetBufferToRender();
-//            if(frame) {
-//                std::cout << frame->frame_index << std::endl;
-//                for(unsigned int eye=0; eye < PangoOculus::num_eyes; ++eye) {
-//                    frame->SetupEye(eye);
-//                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//                    glTranslatef(0,0,-0.5);
-//                    pangolin::glDrawColouredCube(-0.1f,0.1f);
-//                    frame->Unsetup();
-//                }
-//                PutBufferToRender(frame);
-//            }
+        ovrHmd_DismissHSWDisplay(hmd);
 
+        while(should_run) {
+//            TICK("HUD_LOOP");
             StereoFrameBufferAndTargets* render_frame = &buffers[render_id];
             ovrHmd_BeginFrame(hmd, render_frame->frame_index);
-//            ovrHmd_BeginFrame(hmd, 0);
             ovrHmd_EndFrame(hmd, render_frame->Pose_w_eye, &render_frame->eyeTex[0].Texture);
             win.ProcessEvents();
+//            TOCK("HUD_LOOP");
         }
         rendering = false;
 
@@ -221,6 +208,7 @@ public:
 
     StereoFrameBufferAndTargets* GetBufferToRender()
     {
+        static double last_frame_time_s = 0.0;
         static unsigned int frame_index = 0;
 
         if(rendering) {
@@ -228,8 +216,10 @@ public:
 
             next_buffer->frame_index = frame_index++;
             ovrFrameTiming frameTiming = ovrHmd_GetFrameTiming(hmd, next_buffer->frame_index);
-            ovrTrackingState tracking_state = ovrHmd_GetTrackingState(hmd, frameTiming.ScanoutMidpointSeconds );
-//            ovrTrackingState tracking_state = ovrHmd_GetTrackingState(hmd, 0.0 );
+
+
+            ovrTrackingState tracking_state = ovrHmd_GetTrackingState(hmd, last_frame_time_s );
+            last_frame_time_s = frameTiming.ScanoutMidpointSeconds;
             OVR::Posef T_hw = OVR::Posef(tracking_state.HeadPose.ThePose).Inverted();
             ovrPosef T_we[2] = { (T_eh[0]*T_hw).Inverted(), (T_eh[1] * T_hw).Inverted()};
             next_buffer->SetPose(T_hw, T_we);
