@@ -123,7 +123,6 @@ public:
             }
         }
 
-        ovrHmd_Destroy(hmd);
         ovr_Shutdown();
     }
 
@@ -202,6 +201,9 @@ public:
 //            TOCK("HUD_LOOP");
         }
         rendering = false;
+
+        ovrHmd_Destroy(hmd);
+        hmd = 0;
 
         pangolin::DestroyWindow(window_title);
     }
