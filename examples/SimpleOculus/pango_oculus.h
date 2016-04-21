@@ -168,11 +168,14 @@ public:
         rdfOpenGL(0,0) =  1.0f; rdfOpenGL(1,1) = -1.0f; rdfOpenGL(2,2) = -1.0f; rdfOpenGL(3,3) =  1.0f;
         const pangolin::OpenGlMatrix T_gl_vis = rdfOpenGL /** RdfVision.inverse()*/;
 
+        // 7cm back, 8.5 down
+        const pangolin::OpenGlMatrix T_headset_camera = pangolin::OpenGlMatrix::Translate(0, -0.07, 0.085) * pangolin::OpenGlMatrix::RotateX(-M_PI*15.0/180.0);
+
         for(unsigned int b=0; b < num_buffers; ++b) {
             buffers[b].Reinitialise(eye_tex_size.w, eye_tex_size.h);
 
             for(unsigned int eye=0; eye<num_eyes; ++eye) {
-                buffers[b].occ_cam.GetViewOffset(eye) = T_gl_vis * pangolin::OpenGlMatrix( OVR::Matrix4f( T_eh[eye] ) );
+                buffers[b].occ_cam.GetViewOffset(eye) = T_gl_vis * pangolin::OpenGlMatrix( OVR::Matrix4f( T_eh[eye] ) ) * T_headset_camera;
 
                 buffers[b].occ_cam.GetProjectionMatrix(eye) = pangolin::OpenGlMatrix(ovrMatrix4f_Projection(
                     EyeRenderDesc[eye].Fov, 0.1f, 10.0f, ovrProjection_ClipRangeOpenGL | ovrProjection_RightHanded
