@@ -171,24 +171,28 @@ public:
         // 7cm back, 8.5 down
         const pangolin::OpenGlMatrix T_headset_camera = pangolin::OpenGlMatrix::Translate(0, -0.07, 0.085) * pangolin::OpenGlMatrix::RotateX(-M_PI*15.0/180.0);
 
+
+        pangolin::Var<float> focalLength("ui.focalLength", 638.1, 200, 1000);
+        pangolin::Var<float> lensXOffset("ui.lensXOffset", 0.1, 0.0, 0.1);
+//        float focalLength = 600.0;
+//        float lensXOffset = 0.0; //focalLength * 0.06;
+
         for(unsigned int b=0; b < num_buffers; ++b) {
             buffers[b].Reinitialise(eye_tex_size.w, eye_tex_size.h);
 
             for(unsigned int eye=0; eye<num_eyes; ++eye) {
                 buffers[b].occ_cam.GetViewOffset(eye) = T_gl_vis * pangolin::OpenGlMatrix( OVR::Matrix4f( T_eh[eye] ) ) * T_headset_camera;
 
-                buffers[b].occ_cam.GetProjectionMatrix(eye) = pangolin::OpenGlMatrix(ovrMatrix4f_Projection(
-                    EyeRenderDesc[eye].Fov, 0.1f, 10.0f, ovrProjection_ClipRangeOpenGL | ovrProjection_RightHanded
-                ));
+//                buffers[b].occ_cam.GetProjectionMatrix(eye) = pangolin::OpenGlMatrix(ovrMatrix4f_Projection(
+//                    EyeRenderDesc[eye].Fov, 0.1f, 10.0f, ovrProjection_ClipRangeOpenGL | ovrProjection_RightHanded
+//                ));
 
-//              float focalLength = 600.0;
-//              float lensXOffset = 0.0; //focalLength * 0.06;
-//              buffers[b].occ_cam.GetProjectionMatrix(eye) = pangolin::ProjectionMatrixRDF_TopLeft(
-//                  eye_tex_size.w, eye_tex_size.h,
-//                  focalLength, focalLength,
-//                  eye_tex_size.w/2.0 -(eye*2-1)*lensXOffset, eye_tex_size.h/2.0,
-//                  0.2, 100
-//              );
+              buffers[b].occ_cam.GetProjectionMatrix(eye) = pangolin::ProjectionMatrixRUB_BottomLeft(
+                  eye_tex_size.w, eye_tex_size.h,
+                  focalLength, focalLength,
+                  eye_tex_size.w/2.0 -(eye*2-1)*lensXOffset, eye_tex_size.h/2.0,
+                  0.2, 100
+              );
             }
         }
 
@@ -213,6 +217,42 @@ public:
 
     StereoFrameBufferAndTargets* GetBufferToRender()
     {
+        // temp initialisation
+        {
+            const ovrSizei eye_tex_size = ovrHmd_GetFovTextureSize(hmd, (ovrEyeType)0, hmd->DefaultEyeFov[0], 1);
+
+            // RdfVision.inverse() is the identity matrix
+            pangolin::OpenGlMatrix rdfOpenGL; pangolin::SetZero<4,4>(rdfOpenGL.m);
+            rdfOpenGL(0,0) =  1.0f; rdfOpenGL(1,1) = -1.0f; rdfOpenGL(2,2) = -1.0f; rdfOpenGL(3,3) =  1.0f;
+            const pangolin::OpenGlMatrix T_gl_vis = rdfOpenGL /** RdfVision.inverse()*/;
+
+            // 7cm back, 8.5 down
+            const pangolin::OpenGlMatrix T_headset_camera = pangolin::OpenGlMatrix::Translate(0, -0.07, 0.085) * pangolin::OpenGlMatrix::RotateX(-M_PI*15.0/180.0);
+
+            pangolin::Var<float> focalLength("ui.focalLength", 638.1, 200, 1000);
+            pangolin::Var<float> lensXOffset("ui.lensXOffset", 0.1, 0.0, 0.1);
+    //        float focalLength = 600.0;
+    //        float lensXOffset = 0.0; //focalLength * 0.06;
+
+            for(unsigned int b=0; b < num_buffers; ++b) {
+                for(unsigned int eye=0; eye<num_eyes; ++eye) {
+                    buffers[b].occ_cam.GetViewOffset(eye) = T_gl_vis * pangolin::OpenGlMatrix( OVR::Matrix4f( T_eh[eye] ) ) * T_headset_camera;
+
+    //                buffers[b].occ_cam.GetProjectionMatrix(eye) = pangolin::OpenGlMatrix(ovrMatrix4f_Projection(
+    //                    EyeRenderDesc[eye].Fov, 0.1f, 10.0f, ovrProjection_ClipRangeOpenGL | ovrProjection_RightHanded
+    //                ));
+
+                  buffers[b].occ_cam.GetProjectionMatrix(eye) = pangolin::ProjectionMatrixRUB_BottomLeft(
+                      eye_tex_size.w, eye_tex_size.h,
+                      focalLength, focalLength,
+                      eye_tex_size.w/2.0 -((float)eye*2.0f-1.0f)*lensXOffset, eye_tex_size.h/2.0,
+                      0.2, 100
+                  );
+                }
+            }
+        }
+
+
         static double last_frame_time_s = 0.0;
         static unsigned int frame_index = 0;
 
