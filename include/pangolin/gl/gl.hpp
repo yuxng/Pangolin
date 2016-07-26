@@ -595,9 +595,9 @@ inline bool GlBufferData::IsValid() const
     return bo != 0;
 }
 
-inline size_t GlBuffer::SizeBytes() const
+inline size_t GlBufferData::SizeBytes() const
 {
-    return num_elements * GlDataTypeBytes(datatype) * count_per_element;
+    return size_bytes;
 }
 
 inline void GlBufferData::Reinitialise(GlBufferType buffer_type, GLuint size_bytes, GLenum gluse, const unsigned char* data )
