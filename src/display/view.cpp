@@ -387,6 +387,20 @@ void View::GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx,
     glUnProject(winx, winy, winzdepth, mv.m, proj.m, viewport, &x, &y, &z);
 }
 
+void View::GetImageCoordinates(const OpenGlRenderState& cam_state, const GLdouble& world_x, const GLdouble& world_y, const GLdouble& world_z, GLdouble& image_x, GLdouble& image_y) const
+{
+    const GLint viewport[4] = {v.l,v.b,v.w,v.h};
+    const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
+    const OpenGlMatrix mv = cam_state.GetModelViewMatrix();
+
+    GLdouble wx, wy, wz;
+    gluProject(world_x, world_y, world_z,
+               mv.m, proj.m, viewport,
+               &wx, &wy, &wz);
+    image_x = wx/wz;
+    image_y = wy/wz;
+}
+
 void View::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const
 {
     const GLint viewport[4] = {v.l,v.b,v.w,v.h};

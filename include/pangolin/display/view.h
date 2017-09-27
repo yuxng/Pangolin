@@ -102,6 +102,9 @@ struct PANGOLIN_EXPORT View
     //! Obtain object space coordinates of scene at pixel (winx, winy, winzdepth)
     //! winzdepth can be obtained from GetClosestDepth
     void GetObjectCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const;
+
+    //! Project 3D world coordinates to 2D image (pixel) coordinates
+    void GetImageCoordinates(const OpenGlRenderState& cam_state, const GLdouble& world_x, const GLdouble& world_y, const GLdouble& world_z, GLdouble& image_x, GLdouble& image_y) const;
     
     //! Given the specification of Display, compute viewport
     virtual void Resize(const Viewport& parent);
