@@ -51,13 +51,13 @@
 #include <pangolin/compat/ovr.h>
 #endif
 
-namespace pangolin {
-
-#ifdef HAVE_GLES
+#if defined(HAVE_GLES) || defined(HAVE_GLES_2)
     typedef float GLprecision;
 #else
     typedef double GLprecision;
 #endif
+
+namespace pangolin {
 
 /// Capture OpenGL matrix types in enum to typing.
 enum OpenGlStack {
@@ -151,6 +151,10 @@ struct PANGOLIN_EXPORT OpenGlMatrix {
 
     GLprecision operator()(int r, int c) const {
         return m[4 * c + r];
+    }
+    
+    const GLprecision& mat() const {
+        return *m;
     }
     
     // Column major Internal buffer

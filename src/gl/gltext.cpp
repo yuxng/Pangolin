@@ -33,6 +33,10 @@
 #include <pangolin/display/view.h>
 #endif
 
+#ifdef HAVE_GLES
+#include <pangolin/gl/compat/gl2engine.h>
+#endif
+
 namespace pangolin
 {
 

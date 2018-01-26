@@ -99,8 +99,8 @@ public:
     {
         OpenGlMatrix pmv = projection.top() * modelview.top();
         prog_fixed.SaveBind();
-        glUniformMatrix4fv( u_modelViewMatrix, 1, false, modelview.top().m );
-        glUniformMatrix4fv( u_modelViewProjectionMatrix, 1, false, pmv.m );
+        glUniformMatrix4fv( u_modelViewMatrix, 1, false, modelview.top().mat() );
+        glUniformMatrix4fv( u_modelViewProjectionMatrix, 1, false, pmv.mat() );
         prog_fixed.Unbind();
     }
 
