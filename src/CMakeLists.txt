@@ -168,8 +168,8 @@ if(BUILD_PANGOLIN_GUI)
 
     if( HAVE_GLES_2 )
         # Add Pangolins backwards compat layer.
-        list(APPEND HEADERS ${INCDIR}/gl2engine.h )
-        list(APPEND SOURCES gl2engine.cpp)
+        list(APPEND HEADERS ${INCDIR}/gl/compat/gl2engine.h )
+        list(APPEND SOURCES gl/compat/gl2engine.cpp)
     endif()
 endif()
 

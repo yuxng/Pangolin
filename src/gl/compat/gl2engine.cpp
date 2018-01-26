@@ -25,7 +25,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <pangolin/glinclude.h>
+#include <pangolin/gl/glinclude.h>
+#include <pangolin/gl/compat/gl2engine.h>
 
 namespace pangolin
 {
