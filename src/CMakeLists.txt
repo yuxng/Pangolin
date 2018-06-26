@@ -171,6 +171,13 @@ if(BUILD_PANGOLIN_GUI)
         list(APPEND HEADERS ${INCDIR}/gl2engine.h )
         list(APPEND SOURCES gl2engine.cpp)
     endif()
+
+    # headless
+    find_package(PkgConfig)
+    pkg_check_modules(egl REQUIRED egl)
+    list(APPEND WINDOW_FACTORY_REG RegisterNoneWindowFactory)
+    list(APPEND SOURCES display/device/display_headless.cpp)
+    list(APPEND LINK_LIBS ${egl_LIBRARIES} )
 endif()
 
 #######################################################
@@ -219,7 +226,7 @@ else()
                 list(APPEND SOURCES display/device/display_x11.cpp )
                 list(APPEND LINK_LIBS ${X11_LIBRARIES} )
             endif()
-            
+
             if(NOT wayland-client_FOUND AND NOT X11_FOUND)
                 message(FATAL_ERROR "At least one of X11 or Wayland must be found for Pangolin GUI support.")
             endif()

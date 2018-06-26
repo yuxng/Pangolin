@@ -33,13 +33,13 @@ void SampleMethod()
 
 
 int main(/*int argc, char* argv[]*/)
-{  
+{
   // Load configuration data
   pangolin::ParseVarsFile("app.cfg");
 
   // Create OpenGL window in single line
   pangolin::CreateWindowAndBind("Main",640,480);
-  
+
   // 3D Mouse handler requires depth testing to be enabled
   glEnable(GL_DEPTH_TEST);
 
@@ -90,7 +90,7 @@ int main(/*int argc, char* argv[]*/)
   while( !pangolin::ShouldQuit() )
   {
     // Clear entire screen
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if( pangolin::Pushed(a_button) )
       std::cout << "You Pushed a button!" << std::endl;
@@ -110,7 +110,7 @@ int main(/*int argc, char* argv[]*/)
 
     if( pangolin::Pushed(save_cube) )
         d_cam.SaveOnRender("cube");
-    
+
     if( pangolin::Pushed(record_cube) )
         pangolin::DisplayBase().RecordOnRender("ffmpeg:[fps=50,bps=8388608,unique_filename]//screencap.avi");
 
@@ -121,8 +121,12 @@ int main(/*int argc, char* argv[]*/)
     glColor3f(1.0,1.0,1.0);
     pangolin::glDrawColouredCube();
 
+    d_cam.SaveOnRender("lala");
+    pangolin::SaveWindowOnRender("window");
+
     // Swap frames and Process Events
     pangolin::FinishFrame();
+    pangolin::QuitAll();
   }
 
   return 0;
