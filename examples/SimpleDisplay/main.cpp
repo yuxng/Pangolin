@@ -1,6 +1,9 @@
 #include <iostream>
 #include <pangolin/pangolin.h>
 
+#include <GL/glx.h>
+#include <GL/glxext.h>
+
 struct CustomType
 {
   CustomType()
@@ -86,6 +89,24 @@ int main(/*int argc, char* argv[]*/)
   // Demonstration of how we can register a keyboard hook to trigger a method
   pangolin::RegisterKeyPressCallback(pangolin::PANGO_CTRL + 'r', SampleMethod);
 
+  int w = 300;
+  int h = 300;
+
+  GLuint rbid;
+  GLubyte aa[] = "glGenFramebuffersEXT";
+//  void *lala = (void*)glXGetProcAddress(aa);
+//  PFNGLGENFRAMEBUFFERSEXTPROC fct = (PFNGLGENFRAMEBUFFERSEXTPROC)lala;
+//  fct(1, &rbid);
+
+//  glGenRenderbuffersEXT(1, &rbid);
+
+  glGenRenderbuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)glXGetProcAddress(aa);
+  glGenRenderbuffersEXT(1, &rbid);
+
+  pangolin::GlTexture color_buffer(w,h);
+  pangolin::GlRenderBuffer depth_buffer(w,h);
+  pangolin::GlFramebuffer fbo_buffer(color_buffer, depth_buffer);
+
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
   {
@@ -126,6 +147,29 @@ int main(/*int argc, char* argv[]*/)
 
     // Swap frames and Process Events
     pangolin::FinishFrame();
+
+
+
+    pangolin::Viewport offscreen_view(0,0,w,h);
+
+//    pangolin::GlTexture color_buffer(w,h);
+//    pangolin::GlRenderBuffer depth_buffer(w,h);
+//    pangolin::GlFramebuffer fbo_buffer(color_buffer, depth_buffer);
+//    pangolin::GlFramebuffer fbo_buffer;;
+//    fbo_buffer.AttachColour(color_buffer);
+
+    fbo_buffer.Bind();
+
+    offscreen_view.Activate();
+
+    pangolin::glDrawColouredCube();
+
+    glFlush();
+
+    fbo_buffer.Unbind();
+
+    pangolin::SaveFramebuffer("offscreen", offscreen_view);
+
     pangolin::QuitAll();
   }
 

@@ -29,7 +29,7 @@ private:
         EGL_GREEN_SIZE      , 8,
         EGL_BLUE_SIZE       , 8,
         EGL_ALPHA_SIZE      , 8,
-        EGL_DEPTH_SIZE      , 24,
+        EGL_DEPTH_SIZE      , 8,
         EGL_STENCIL_SIZE    , 8,
         EGL_NONE
     };
@@ -82,15 +82,15 @@ EGLDisplayHL::EGLDisplayHL(const int width, const int height) {
 
     egl_context = eglCreateContext(egl_display, egl_configs[0], EGL_NO_CONTEXT, nullptr);
 
-    const EGLint pbufferAttribs[] = {
-        EGL_WIDTH, width,
-        EGL_HEIGHT, height,
-        EGL_NONE,
-    };
-    egl_surface = eglCreatePbufferSurface(egl_display, egl_configs[0],  pbufferAttribs);
-    if (egl_surface == EGL_NO_SURFACE) {
-        std::cerr << "Cannot create EGL surface" << std::endl;
-    }
+//    const EGLint pbufferAttribs[] = {
+//        EGL_WIDTH, width,
+//        EGL_HEIGHT, height,
+//        EGL_NONE,
+//    };
+//    egl_surface = eglCreatePbufferSurface(egl_display, egl_configs[0],  pbufferAttribs);
+//    if (egl_surface == EGL_NO_SURFACE) {
+//        std::cerr << "Cannot create EGL surface" << std::endl;
+//    }
 }
 
 EGLDisplayHL::~EGLDisplayHL() {
@@ -104,7 +104,8 @@ void EGLDisplayHL::swap() {
 }
 
 void EGLDisplayHL::makeCurrent() {
-    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+//    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
 }
 
 HeadlessWindow::HeadlessWindow(const int w, const int h) {
