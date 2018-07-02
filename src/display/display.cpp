@@ -149,6 +149,8 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
 #endif
     }
 
+    glewInit();
+
     std::unique_ptr<WindowInterface> window = FactoryRegistry<WindowInterface>::I().Open(win_uri);
 
     // We're expecting not only a WindowInterface, but a PangolinGl.
@@ -162,7 +164,6 @@ WindowInterface& CreateWindowAndBind(std::string window_title, int w, int h, con
     context->is_high_res = win_uri.Get(PARAM_HIGHRES,false);
     context->MakeCurrent();
     context->ProcessEvents();
-    glewInit();
 
     return *context;
 }
