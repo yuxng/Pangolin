@@ -92,16 +92,15 @@ int main(/*int argc, char* argv[]*/)
   int w = 300;
   int h = 300;
 
-  GLuint rbid;
-  GLubyte aa[] = "glGenFramebuffersEXT";
-//  void *lala = (void*)glXGetProcAddress(aa);
-//  PFNGLGENFRAMEBUFFERSEXTPROC fct = (PFNGLGENFRAMEBUFFERSEXTPROC)lala;
-//  fct(1, &rbid);
-
-//  glGenRenderbuffersEXT(1, &rbid);
-
-  glGenRenderbuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)glXGetProcAddress(aa);
-  glGenRenderbuffersEXT(1, &rbid);
+  glGenRenderbuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)glXGetProcAddress((GLubyte*)"glGenFramebuffersEXT");
+  glBindRenderbufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)glXGetProcAddress((GLubyte*)"glBindRenderbufferEXT");
+  glRenderbufferStorageEXT = (PFNGLRENDERBUFFERSTORAGEEXTPROC)glXGetProcAddress((GLubyte*)"glRenderbufferStorageEXT");
+  glGenFramebuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)glXGetProcAddress((GLubyte*)"glGenFramebuffersEXT");
+  glBindFramebufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)glXGetProcAddress((GLubyte*)"glBindFramebufferEXT");
+  glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)glXGetProcAddress((GLubyte*)"glFramebufferTexture2DEXT");
+  glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)glXGetProcAddress((GLubyte*)"glFramebufferRenderbufferEXT");
+  glDrawBuffers = (PFNGLDRAWBUFFERSPROC)glXGetProcAddress((GLubyte*)"glDrawBuffers");
+  glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSPROC)glXGetProcAddress((GLubyte*)"glDeleteFramebuffersEXT");
 
   pangolin::GlTexture color_buffer(w,h);
   pangolin::GlRenderBuffer depth_buffer(w,h);
@@ -151,12 +150,6 @@ int main(/*int argc, char* argv[]*/)
 
 
     pangolin::Viewport offscreen_view(0,0,w,h);
-
-//    pangolin::GlTexture color_buffer(w,h);
-//    pangolin::GlRenderBuffer depth_buffer(w,h);
-//    pangolin::GlFramebuffer fbo_buffer(color_buffer, depth_buffer);
-//    pangolin::GlFramebuffer fbo_buffer;;
-//    fbo_buffer.AttachColour(color_buffer);
 
     fbo_buffer.Bind();
 
