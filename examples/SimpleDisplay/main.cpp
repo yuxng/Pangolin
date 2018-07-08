@@ -147,21 +147,14 @@ int main(/*int argc, char* argv[]*/)
     // Swap frames and Process Events
     pangolin::FinishFrame();
 
-
-
     pangolin::Viewport offscreen_view(0,0,w,h);
-
     fbo_buffer.Bind();
-
     offscreen_view.Activate();
-
-    pangolin::glDrawColouredCube();
-
+    glClearColor(1, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
     glFlush();
-
-    fbo_buffer.Unbind();
-
     pangolin::SaveFramebuffer("offscreen", offscreen_view);
+    fbo_buffer.Unbind();
 
     pangolin::QuitAll();
   }
