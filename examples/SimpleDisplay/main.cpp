@@ -1,8 +1,8 @@
 #include <iostream>
 #include <pangolin/pangolin.h>
 
-#include <GL/glx.h>
-#include <GL/glxext.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 
 struct CustomType
 {
@@ -92,15 +92,15 @@ int main(/*int argc, char* argv[]*/)
   int w = 300;
   int h = 300;
 
-  glGenRenderbuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)glXGetProcAddress((GLubyte*)"glGenFramebuffersEXT");
-  glBindRenderbufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)glXGetProcAddress((GLubyte*)"glBindRenderbufferEXT");
-  glRenderbufferStorageEXT = (PFNGLRENDERBUFFERSTORAGEEXTPROC)glXGetProcAddress((GLubyte*)"glRenderbufferStorageEXT");
-  glGenFramebuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)glXGetProcAddress((GLubyte*)"glGenFramebuffersEXT");
-  glBindFramebufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)glXGetProcAddress((GLubyte*)"glBindFramebufferEXT");
-  glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)glXGetProcAddress((GLubyte*)"glFramebufferTexture2DEXT");
-  glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)glXGetProcAddress((GLubyte*)"glFramebufferRenderbufferEXT");
-  glDrawBuffers = (PFNGLDRAWBUFFERSPROC)glXGetProcAddress((GLubyte*)"glDrawBuffers");
-  glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSPROC)glXGetProcAddress((GLubyte*)"glDeleteFramebuffersEXT");
+  glGenRenderbuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)eglGetProcAddress("glGenFramebuffersEXT");
+  glBindRenderbufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)eglGetProcAddress("glBindRenderbufferEXT");
+  glRenderbufferStorageEXT = (PFNGLRENDERBUFFERSTORAGEEXTPROC)eglGetProcAddress("glRenderbufferStorageEXT");
+  glGenFramebuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)eglGetProcAddress("glGenFramebuffersEXT");
+  glBindFramebufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)eglGetProcAddress("glBindFramebufferEXT");
+  glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)eglGetProcAddress("glFramebufferTexture2DEXT");
+  glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)eglGetProcAddress("glFramebufferRenderbufferEXT");
+  glDrawBuffers = (PFNGLDRAWBUFFERSPROC)eglGetProcAddress("glDrawBuffers");
+  glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSPROC)eglGetProcAddress("glDeleteFramebuffersEXT");
 
   pangolin::GlTexture color_buffer(w,h);
   pangolin::GlRenderBuffer depth_buffer(w,h);
