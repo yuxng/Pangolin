@@ -134,27 +134,41 @@ int main(/*int argc, char* argv[]*/)
     if( pangolin::Pushed(record_cube) )
         pangolin::DisplayBase().RecordOnRender("ffmpeg:[fps=50,bps=8388608,unique_filename]//screencap.avi");
 
+    pangolin::GlTexture color_buffer2(640, 480);
+    pangolin::GlRenderBuffer depth_buffer2(640, 480);
+    //d_cam.SaveOnRender("sfsfd");
+    pangolin::GlFramebuffer fbo_buffer2(color_buffer2, depth_buffer2);
+
     // Activate efficiently by object
+    fbo_buffer2.Bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     d_cam.Activate(s_cam);
 
     // Render some stuff
+    glClearColor(1, 1, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(1.0,1.0,1.0);
     pangolin::glDrawColouredCube();
+    pangolin::glDrawAxis(1);
+    glFlush();
+    pangolin::SaveFramebuffer("cam", d_cam.vp);
+    fbo_buffer2.Unbind();
 
-    d_cam.SaveOnRender("lala");
-    pangolin::SaveWindowOnRender("window");
+//    d_cam.SaveOnRender("lala");
+//    pangolin::SaveWindowOnRender("window");
+//    pangolin::GetBoundWindow()->context;
 
     // Swap frames and Process Events
     pangolin::FinishFrame();
 
-    pangolin::Viewport offscreen_view(0,0,w,h);
-    fbo_buffer.Bind();
-    offscreen_view.Activate();
-    glClearColor(1, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glFlush();
-    pangolin::SaveFramebuffer("offscreen", offscreen_view);
-    fbo_buffer.Unbind();
+//    pangolin::Viewport offscreen_view(0,0,w,h);
+//    fbo_buffer.Bind();
+//    offscreen_view.Activate();
+//    glClearColor(1, 0, 0, 1);
+//    glClear(GL_COLOR_BUFFER_BIT);
+//    glFlush();
+//    pangolin::SaveFramebuffer("offscreen", offscreen_view);
+//    fbo_buffer.Unbind();
 
     pangolin::QuitAll();
   }
