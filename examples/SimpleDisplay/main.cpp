@@ -106,11 +106,22 @@ int main(/*int argc, char* argv[]*/)
   pangolin::GlRenderBuffer depth_buffer(w,h);
   pangolin::GlFramebuffer fbo_buffer(color_buffer, depth_buffer);
 
+  CheckGlDieOnError();
+
+  pangolin::GlTexture color_buffer2(640, 480);
+  pangolin::GlRenderBuffer depth_buffer2(640, 480);
+  pangolin::GlFramebuffer fbo_buffer2(color_buffer2, depth_buffer2);
+  fbo_buffer2.Bind();
+
+  CheckGlDieOnError();
+
   // Default hooks for exiting (Esc) and fullscreen (tab).
   while( !pangolin::ShouldQuit() )
   {
     // Clear entire screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    CheckGlDieOnError();
 
     if( pangolin::Pushed(a_button) )
       std::cout << "You Pushed a button!" << std::endl;
@@ -134,13 +145,10 @@ int main(/*int argc, char* argv[]*/)
     if( pangolin::Pushed(record_cube) )
         pangolin::DisplayBase().RecordOnRender("ffmpeg:[fps=50,bps=8388608,unique_filename]//screencap.avi");
 
-    pangolin::GlTexture color_buffer2(640, 480);
-    pangolin::GlRenderBuffer depth_buffer2(640, 480);
-    //d_cam.SaveOnRender("sfsfd");
-    pangolin::GlFramebuffer fbo_buffer2(color_buffer2, depth_buffer2);
+    CheckGlDieOnError();
 
     // Activate efficiently by object
-    fbo_buffer2.Bind();
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     d_cam.Activate(s_cam);
 
@@ -151,11 +159,10 @@ int main(/*int argc, char* argv[]*/)
     pangolin::glDrawColouredCube();
     pangolin::glDrawAxis(1);
     glFlush();
-    pangolin::SaveFramebuffer("cam", d_cam.vp);
-    fbo_buffer2.Unbind();
+    pangolin::SaveFramebuffer("cam_fb", d_cam.vp);
 
-//    d_cam.SaveOnRender("lala");
-//    pangolin::SaveWindowOnRender("window");
+    d_cam.SaveOnRender("cam_sor");
+    pangolin::SaveWindowOnRender("window");
 //    pangolin::GetBoundWindow()->context;
 
     // Swap frames and Process Events
@@ -172,6 +179,8 @@ int main(/*int argc, char* argv[]*/)
 
     pangolin::QuitAll();
   }
+
+  fbo_buffer2.Unbind();
 
   return 0;
 }
