@@ -28,6 +28,7 @@
 #pragma once
 
 #include <pangolin/gl/glplatform.h>
+#include <vector>
 
 namespace pangolin {
 
@@ -76,5 +77,16 @@ GLint glUnProject(
     const GLint viewport[4],
     double* objx, double* objy, double* objz
 );
+
+#ifdef HAVE_EIGEN
+PANGOLIN_EXPORT
+GLint glUnProject(
+    std::vector<float> winx, std::vector<float> winy, std::vector<float> winz,
+    const double modelMatrix[16],
+    const double projMatrix[16],
+    const GLint viewport[4],
+    std::vector<double>* objx, std::vector<double>* objy, std::vector<double>* objz
+);
+#endif
 
 }

@@ -110,4 +110,17 @@ void Viewport::GetCamCoordinates(const OpenGlRenderState& cam_state, double winx
 #endif
 }
 
+#ifdef HAVE_EIGEN
+void Viewport::GetCamCoordinatesList(const OpenGlRenderState& cam_state, std::vector<float> winx, std::vector<float> winy, std::vector<float> winzdepth, std::vector<GLdouble>& x, std::vector<GLdouble>& y, std::vector<GLdouble>& z) const
+{
+    const GLint viewport[4] = {l, b, w, h};
+    const OpenGlMatrix proj = cam_state.GetProjectionMatrix();
+#ifndef HAVE_GLES
+    glUnProject(winx, winy, winzdepth, Identity4d, proj.m, viewport, &x, &y, &z);
+#else
+    glUnProject(winx, winy, winzdepth, Identity4f, proj.m, viewport, &x, &y, &z);
+#endif
+}
+#endif
+
 }

@@ -28,6 +28,13 @@
 #include <pangolin/gl/glpangoglu.h>
 #include <pangolin/utils/simple_math.h>
 
+#include <vector>
+
+#ifdef HAVE_EIGEN
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#endif
+
 namespace pangolin {
 
 const GLubyte gNotErrorLookup[] = "XX";
@@ -259,6 +266,82 @@ GLint glUnProject(
 
     return GL_TRUE;
 }
+
+#ifdef HAVE_EIGEN
+GLint glUnProject(
+    std::vector<float> winx, std::vector<float> winy, std::vector<float> winz,
+    const double mv[16],
+    const double proj[16],
+    const GLint viewport[4],
+    std::vector<double>* objx, std::vector<double>* objy, std::vector<double>* objz)
+{
+    double t1[16];
+
+    MatMul<4,4,4,double>(t1, proj, mv);
+
+    if (!InvertMatrix<double>(t1, t1)) {
+        return(GL_FALSE);
+    }
+
+    Eigen::Map<Eigen::VectorXf> winglx(winx.data(), winx.size());
+    Eigen::Map<Eigen::VectorXf> wingly(winy.data(), winy.size());
+    Eigen::Map<Eigen::VectorXf> winglz(winz.data(), winz.size());
+
+    // Map x and y from window coordinates
+//    double in[4] = {winx, winy, winz, 1.0f};
+//    in[0] = (in[0] - viewport[0]) / viewport[2];
+//    in[1] = (in[1] - viewport[1]) / viewport[3];
+
+    // Map to range -1 to 1
+//    in[0] = in[0] * 2 - 1;
+//    in[1] = in[1] * 2 - 1;
+//    in[2] = in[2] * 2 - 1;
+
+    // Map x and y from window coordinates
+    // Map to range -1 to 1
+    auto in0 = ((winglx.array()-viewport[0]) / viewport[2] * 2) - 1;
+    auto in1 = ((wingly.array()-viewport[1]) / viewport[3] * 2) - 1;
+    auto in2 = (winglz.array() * 2) - 1;
+
+    double out[4];
+//    MatMul<4,4,1,double>(out, t1, in);
+
+//    Eigen::Matrix4Xd in;
+//    in << in0, in1, in2, Eigen::VectorXd::Ones(winglx.size());
+    Eigen::Matrix3Xf in;
+    in << in0, in1, in2;
+//    Eigen::Map<Eigen::Matrix4d> tt1(t1);
+    Eigen::Affine3d ttt1((Eigen::Map<Eigen::Matrix4d>(t1)));
+
+    //auto outout = ttt1.matrix().array() * in.array().colwise();
+    // https://stackoverflow.com/a/38845543/8144672
+    Eigen::Matrix3Xd outout = (ttt1.linear() * in.cast<double>()) + ttt1.translation();
+
+    if (out[3] == 0.0) {
+        return(GL_FALSE);
+    }
+
+    // Normalise
+    out[0] /= out[3];
+    out[1] /= out[3];
+    out[2] /= out[3];
+
+    // Copy out
+//    *objx = out[0];
+//    *objy = out[1];
+//    *objz = out[2];
+
+    const Eigen::VectorXd &outx = outout.col(0);
+    const Eigen::VectorXd &outy = outout.col(1);
+    const Eigen::VectorXd &outz = outout.col(2);
+
+    objx->assign(outx.data(), outx.data()+outx.size());
+    objy->assign(outy.data(), outy.data()+outy.size());
+    objz->assign(outz.data(), outz.data()+outz.size());
+
+    return GL_TRUE;
+}
+#endif
 
 
 }
