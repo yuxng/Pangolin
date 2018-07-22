@@ -54,7 +54,7 @@ struct HeadlessWindow : public PangolinGl {
 
     void ProcessEvents() override;
 
-    std::unique_ptr<EGLDisplayHL> display;
+    EGLDisplayHL display;
 };
 
 EGLDisplayHL::EGLDisplayHL(const int width, const int height) {
@@ -91,6 +91,19 @@ EGLDisplayHL::EGLDisplayHL(const int width, const int height) {
     if (egl_surface == EGL_NO_SURFACE) {
         std::cerr << "Cannot create EGL surface" << std::endl;
     }
+
+    // TODO: this should not be required
+    // missing: "#define GLEW_EGL" before including glew.h
+    glGenRenderbuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)eglGetProcAddress("glGenFramebuffersEXT");
+    glBindRenderbufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)eglGetProcAddress("glBindRenderbufferEXT");
+    glRenderbufferStorageEXT = (PFNGLRENDERBUFFERSTORAGEEXTPROC)eglGetProcAddress("glRenderbufferStorageEXT");
+    glGenFramebuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)eglGetProcAddress("glGenFramebuffersEXT");
+    glBindFramebufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)eglGetProcAddress("glBindFramebufferEXT");
+    glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)eglGetProcAddress("glFramebufferTexture2DEXT");
+    glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)eglGetProcAddress("glFramebufferRenderbufferEXT");
+    glDrawBuffers = (PFNGLDRAWBUFFERSPROC)eglGetProcAddress("glDrawBuffers");
+    glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSPROC)eglGetProcAddress("glDeleteFramebuffersEXT");
+
 }
 
 EGLDisplayHL::~EGLDisplayHL() {
@@ -108,16 +121,15 @@ void EGLDisplayHL::makeCurrent() {
 //    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
 }
 
-HeadlessWindow::HeadlessWindow(const int w, const int h) {
+HeadlessWindow::HeadlessWindow(const int w, const int h) : display(w, h) {
     windowed_size[0] = w;
     windowed_size[1] = h;
-    display = std::unique_ptr<EGLDisplayHL>(new EGLDisplayHL(w, h));
 }
 
 HeadlessWindow::~HeadlessWindow() { }
 
 void HeadlessWindow::MakeCurrent() {
-    display->makeCurrent();
+    display.makeCurrent();
     context = this;
 }
 
@@ -130,12 +142,8 @@ void HeadlessWindow::Resize(const unsigned int /*w*/, const unsigned int /*h*/) 
 void HeadlessWindow::ProcessEvents() { }
 
 void HeadlessWindow::SwapBuffers() {
-    display->swap();
+    display.swap();
     MakeCurrent();
-}
-
-std::unique_ptr<WindowInterface> CreateHeadlessWindowAndBind(const int w, const int h) {
-    return std::unique_ptr<WindowInterface>(new HeadlessWindow(w, h));
 }
 
 } // namespace headless
@@ -143,9 +151,7 @@ std::unique_ptr<WindowInterface> CreateHeadlessWindowAndBind(const int w, const 
 PANGOLIN_REGISTER_FACTORY(NoneWindow) {
 struct HeadlessWindowFactory : public FactoryInterface<WindowInterface> {
     std::unique_ptr<WindowInterface> Open(const Uri& uri) override {
-        const int w = uri.Get<int>("w", 640);
-        const int h = uri.Get<int>("h", 480);
-        return std::unique_ptr<WindowInterface>(headless::CreateHeadlessWindowAndBind(w, h));
+        return std::unique_ptr<WindowInterface>(new headless::HeadlessWindow(uri.Get<int>("w", 640), uri.Get<int>("h", 480)));
     }
 
     virtual ~HeadlessWindowFactory() { }

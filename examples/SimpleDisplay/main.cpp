@@ -1,9 +1,6 @@
 #include <iostream>
 #include <pangolin/pangolin.h>
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
 struct CustomType
 {
   CustomType()
@@ -92,21 +89,12 @@ int main(/*int argc, char* argv[]*/)
   int w = 300;
   int h = 300;
 
-  glGenRenderbuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)eglGetProcAddress("glGenFramebuffersEXT");
-  glBindRenderbufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)eglGetProcAddress("glBindRenderbufferEXT");
-  glRenderbufferStorageEXT = (PFNGLRENDERBUFFERSTORAGEEXTPROC)eglGetProcAddress("glRenderbufferStorageEXT");
-  glGenFramebuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)eglGetProcAddress("glGenFramebuffersEXT");
-  glBindFramebufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)eglGetProcAddress("glBindFramebufferEXT");
-  glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)eglGetProcAddress("glFramebufferTexture2DEXT");
-  glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)eglGetProcAddress("glFramebufferRenderbufferEXT");
-  glDrawBuffers = (PFNGLDRAWBUFFERSPROC)eglGetProcAddress("glDrawBuffers");
-  glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSPROC)eglGetProcAddress("glDeleteFramebuffersEXT");
 
-  pangolin::GlTexture color_buffer(w,h);
-  pangolin::GlRenderBuffer depth_buffer(w,h);
-  pangolin::GlFramebuffer fbo_buffer(color_buffer, depth_buffer);
+//  pangolin::GlTexture color_buffer(w,h);
+//  pangolin::GlRenderBuffer depth_buffer(w,h);
+//  pangolin::GlFramebuffer fbo_buffer(color_buffer, depth_buffer);
 
-  CheckGlDieOnError();
+//  CheckGlDieOnError();
 
   pangolin::GlTexture color_buffer2(640, 480);
   pangolin::GlRenderBuffer depth_buffer2(640, 480);
