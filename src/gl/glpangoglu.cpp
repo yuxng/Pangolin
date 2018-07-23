@@ -268,12 +268,12 @@ GLint glUnProject(
 }
 
 #ifdef HAVE_EIGEN
-GLint glUnProject(
+GLint glUnProjectList(
     std::vector<float> winx, std::vector<float> winy, std::vector<float> winz,
     const double mv[16],
     const double proj[16],
     const GLint viewport[4],
-    std::vector<double>* objx, std::vector<double>* objy, std::vector<double>* objz)
+    Eigen::VectorXd& objx, Eigen::VectorXd& objy, Eigen::VectorXd& objz)
 {
     double t1[16];
 
@@ -283,9 +283,9 @@ GLint glUnProject(
         return(GL_FALSE);
     }
 
-    Eigen::Map<Eigen::VectorXf> winglx(winx.data(), winx.size());
-    Eigen::Map<Eigen::VectorXf> wingly(winy.data(), winy.size());
-    Eigen::Map<Eigen::VectorXf> winglz(winz.data(), winz.size());
+    Eigen::Map<Eigen::RowVectorXf> winglx(winx.data(), winx.size());
+    Eigen::Map<Eigen::RowVectorXf> wingly(winy.data(), winy.size());
+    Eigen::Map<Eigen::RowVectorXf> winglz(winz.data(), winz.size());
 
     // Map x and y from window coordinates
 //    double in[4] = {winx, winy, winz, 1.0f};
@@ -299,49 +299,153 @@ GLint glUnProject(
 
     // Map x and y from window coordinates
     // Map to range -1 to 1
-    auto in0 = ((winglx.array()-viewport[0]) / viewport[2] * 2) - 1;
-    auto in1 = ((wingly.array()-viewport[1]) / viewport[3] * 2) - 1;
-    auto in2 = (winglz.array() * 2) - 1;
+    Eigen::VectorXf in0 = ((winglx.array()-viewport[0]) / viewport[2] * 2) - 1;
+    Eigen::VectorXf in1 = ((wingly.array()-viewport[1]) / viewport[3] * 2) - 1;
+    Eigen::VectorXf in2 = (winglz.array() * 2) - 1;
 
-    double out[4];
+//    double out[4];
 //    MatMul<4,4,1,double>(out, t1, in);
 
-//    Eigen::Matrix4Xd in;
-//    in << in0, in1, in2, Eigen::VectorXd::Ones(winglx.size());
-    Eigen::Matrix3Xf in;
-    in << in0, in1, in2;
-//    Eigen::Map<Eigen::Matrix4d> tt1(t1);
-    Eigen::Affine3d ttt1((Eigen::Map<Eigen::Matrix4d>(t1)));
+    Eigen::Matrix4Xf in;
+    in.resize(Eigen::NoChange, winglz.size());
+    //in << in0, in1, in2, Eigen::VectorXf::Ones(winglx.size());
+    in.row(0) = in0;
+    in.row(1) = in1;
+    in.row(2) = in2;
+    in.row(3) = Eigen::VectorXf::Ones(winglx.size());
+//    Eigen::Matrix3Xf in;
+//    in.resize(Eigen::NoChange, winglz.size());
+//    in << in0, in1, in2;
+    Eigen::Map<Eigen::Matrix4d> tt1(t1);
+//    Eigen::Affine3d ttt1((Eigen::Map<Eigen::Matrix4d>(t1)));
+
+//    for(uint i=0; i<in.cols(); i++) {
+//        std::cout << i << ": " << in.col(i).transpose() << std::endl;
+//    }
+
+//    std::cout << in.rows() << ", " << in.cols() << std::endl;
+//    std::cout << "min " << in.rowwise().minCoeff().transpose() << std::endl;
+//    std::cout << "max " << in.rowwise().maxCoeff().transpose() << std::endl;
 
     //auto outout = ttt1.matrix().array() * in.array().colwise();
     // https://stackoverflow.com/a/38845543/8144672
-    Eigen::Matrix3Xd outout = (ttt1.linear() * in.cast<double>()) + ttt1.translation();
+    //Eigen::MatrixXd outout = (ttt1.linear() * in.cast<double>()) + ttt1.translation();
+//    Eigen::MatrixXd outout = ttt1.linear() * in.cast<double>();
+    Eigen::Matrix4Xd outout(4, winz.size());
 
-    if (out[3] == 0.0) {
-        return(GL_FALSE);
+//    std::cout << "tt1 " << std::endl << tt1 << std::endl;
+//    std::cout << "in " << std::endl << in.cast<double>().col(0).transpose() << std::endl;
+
+    for(uint i=0; i<winz.size(); i++) {
+        if(winz[i]<1.0f) {
+//            Eigen::Vector4d aa = in.cast<double>().col(i);
+//            std::cout << i << " aa " << aa.transpose() << std::endl;
+//            Eigen::Vector4d bb = tt1 * aa;
+//            std::cout << i << " bb " << bb.transpose() << std::endl;
+//            outout.col(i) = bb / bb[3];
+//            std::cout << i << " oo " << outout.col(i).transpose() << std::endl;
+            outout.col(i) = tt1 * in.cast<double>().col(i);
+        }
     }
 
+//    std::cout << "out " << std::endl << outout.col(0).transpose() << std::endl;
+
+//    std::cout << outout.rows() << ", " << outout.cols() << std::endl;
+//    std::cout << "min " << outout.rowwise().minCoeff().transpose() << std::endl;
+//    std::cout << "max " << outout.rowwise().maxCoeff().transpose() << std::endl;
+
+//    Eigen::Map<Eigen::Matrix4d> tt1(t1);
+//    auto outout = tt1 * in.colwise();
+
+//    if (out[3] == 0.0) {
+//        return(GL_FALSE);
+//    }
+
     // Normalise
-    out[0] /= out[3];
-    out[1] /= out[3];
-    out[2] /= out[3];
+//    out[0] /= out[3];
+//    out[1] /= out[3];
+//    out[2] /= out[3];
 
     // Copy out
 //    *objx = out[0];
 //    *objy = out[1];
 //    *objz = out[2];
 
-    const Eigen::VectorXd &outx = outout.col(0);
-    const Eigen::VectorXd &outy = outout.col(1);
-    const Eigen::VectorXd &outz = outout.col(2);
+//    const Eigen::VectorXd &outx = outout.row(0).array();
+//    const Eigen::VectorXd &outy = outout.row(1).array();
+//    const Eigen::VectorXd &outz = outout.row(2).array();
 
-    objx->assign(outx.data(), outx.data()+outx.size());
-    objy->assign(outy.data(), outy.data()+outy.size());
-    objz->assign(outz.data(), outz.data()+outz.size());
+    const Eigen::VectorXd &outx = outout.row(0).array() / outout.row(3).array();
+    const Eigen::VectorXd &outy = outout.row(1).array() / outout.row(3).array();
+    const Eigen::VectorXd &outz = outout.row(2).array() / outout.row(3).array();
+
+//    std::cout << "outout min " << outout.rowwise().minCoeff().transpose() << std::endl;
+//    std::cout << "outout max " << outout.rowwise().maxCoeff().transpose() << std::endl;
+
+//    objx->assign(outx.data(), outx.data()+outx.size());
+//    objy->assign(outy.data(), outy.data()+outy.size());
+//    objz->assign(outz.data(), outz.data()+outz.size());
+//    *objx = std::vector<double>(outx.data(), outx.data()+outx.size());
+//    *objy = std::vector<double>(outy.data(), outy.data()+outy.size());
+//    *objz = std::vector<double>(outz.data(), outz.data()+outz.size());
+
+//    std::cout << *std::min_element(objx->begin(), objx->end()) << ", " << *std::max_element(objx->begin(), objx->end()) << std::endl;
+
+    objx = outx;
+    objy = outy;
+    objz = outz;
 
     return GL_TRUE;
 }
 #endif
+
+void glUnProjectList2(
+    std::vector<float> winx, std::vector<float> winy, std::vector<float> winz,
+    const double mv[16],
+    const double proj[16],
+    const GLint viewport[4],
+    std::vector<double>* objx, std::vector<double>* objy, std::vector<double>* objz)
+{
+    if(winx.size()!=winz.size() || winy.size()!=winz.size())
+        throw std::runtime_error("coordinate dimensions mismatch!");
+
+    double t1[16];
+
+    MatMul<4,4,4,double>(t1, proj, mv);
+
+    if (!InvertMatrix<double>(t1, t1)) {
+        return;
+    }
+
+    objx->resize(winx.size());
+    objy->resize(winy.size());
+    objz->resize(winz.size());
+
+    for(uint i=0; i<winz.size(); i++) {
+        // Map x and y from window coordinates
+        double in[4] = {winx[i], winy[i], winz[i], 1.0f};
+        in[0] = (in[0] - viewport[0]) / viewport[2];
+        in[1] = (in[1] - viewport[1]) / viewport[3];
+
+        // Map to range -1 to 1
+        in[0] = in[0] * 2 - 1;
+        in[1] = in[1] * 2 - 1;
+        in[2] = in[2] * 2 - 1;
+
+        double out[4];
+        MatMul<4,4,1,double>(out, t1, in);
+
+        // Normalise
+        out[0] /= out[3];
+        out[1] /= out[3];
+        out[2] /= out[3];
+
+        // Copy out
+        (*objx)[i] = out[0];
+        (*objy)[i] = out[1];
+        (*objz)[i] = out[2];
+    }
+}
 
 
 }

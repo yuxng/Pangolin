@@ -30,6 +30,8 @@
 #include <pangolin/gl/glplatform.h>
 #include <vector>
 
+#include <Eigen/Core>
+
 namespace pangolin {
 
 /// Clone of gluProject
@@ -80,13 +82,23 @@ GLint glUnProject(
 
 #ifdef HAVE_EIGEN
 PANGOLIN_EXPORT
-GLint glUnProject(
+GLint glUnProjectList(
+    std::vector<float> winx, std::vector<float> winy, std::vector<float> winz,
+    const double modelMatrix[16],
+    const double projMatrix[16],
+    const GLint viewport[4],
+    //std::vector<double>* objx, std::vector<double>* objy, std::vector<double>* objz
+    Eigen::VectorXd& objx, Eigen::VectorXd& objy, Eigen::VectorXd& objz
+);
+#endif
+
+PANGOLIN_EXPORT
+void glUnProjectList2(
     std::vector<float> winx, std::vector<float> winy, std::vector<float> winz,
     const double modelMatrix[16],
     const double projMatrix[16],
     const GLint viewport[4],
     std::vector<double>* objx, std::vector<double>* objy, std::vector<double>* objz
 );
-#endif
 
 }

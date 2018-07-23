@@ -55,8 +55,10 @@ struct PANGOLIN_EXPORT Viewport
     void GetCamCoordinates(const OpenGlRenderState& cam_state, double winx, double winy, double winzdepth, GLdouble& x, GLdouble& y, GLdouble& z) const;
 
 #ifdef HAVE_EIGEN
-    void GetCamCoordinatesList(const OpenGlRenderState& cam_state, std::vector<float> winx, std::vector<float> winy, std::vector<float> winzdepth, std::vector<GLdouble>& x, std::vector<GLdouble>& y, std::vector<GLdouble>& z) const;
+    void GetCamCoordinatesList(const OpenGlRenderState& cam_state, std::vector<float> winx, std::vector<float> winy, std::vector<float> winzdepth, Eigen::VectorXd& x, Eigen::VectorXd& y, Eigen::VectorXd& z) const;
 #endif
+
+    void GetCamCoordinatesList2(const OpenGlRenderState& cam_state, std::vector<float> winx, std::vector<float> winy, std::vector<float> winzdepth, std::vector<GLdouble>& x, std::vector<GLdouble>& y, std::vector<GLdouble>& z) const;
     
     static void DisableScissor();
     
