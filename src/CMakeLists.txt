@@ -152,7 +152,7 @@ if(BUILD_PANGOLIN_GUI)
         list(APPEND SOURCES "ios/PangolinAppDelegate.mm" "ios/PangolinViewController.mm" )
         list(APPEND WINDOW_FACTORY_REG RegisterIosWindowFactory)
     else()
-        find_package(OpenGL REQUIRED QUIET)
+        find_package(OpenGL REQUIRED COMPONENTS OpenGL)
         list(APPEND USER_INC  "${OPENGL_INCLUDE_DIR}" )
         list(APPEND LINK_LIBS "${OPENGL_LIBRARIES}" )
 
@@ -218,6 +218,13 @@ else()
                 list(APPEND USER_INC ${X11_INCLUDE_DIR})
                 list(APPEND SOURCES display/device/display_x11.cpp )
                 list(APPEND LINK_LIBS ${X11_LIBRARIES} )
+                # EGL
+                # GLVND support in CMake:
+                # https://devblogs.nvidia.com/linking-opengl-server-side-rendering/
+                # TODO: use "target_link_libraries(${LIBRARY_NAME} PRIVATE OpenGL::OpenGL OpenGL::EGL)" for CMake > 3.10
+                find_package(OpenGL REQUIRED COMPONENTS EGL)
+                list(APPEND USER_INC  ${OPENGL_INCLUDE_DIR} )
+                list(APPEND LINK_LIBS ${OPENGL_LIBRARIES} )
             endif()
             
             if(NOT wayland-client_FOUND AND NOT X11_FOUND)
