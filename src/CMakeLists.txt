@@ -227,7 +227,7 @@ else()
                 list(APPEND USER_INC  ${OPENGL_INCLUDE_DIR} )
                 list(APPEND LINK_LIBS ${OPENGL_LIBRARIES} )
             endif()
-            
+
             if(NOT wayland-client_FOUND AND NOT X11_FOUND)
                 message(FATAL_ERROR "At least one of X11 or Wayland must be found for Pangolin GUI support.")
             endif()
