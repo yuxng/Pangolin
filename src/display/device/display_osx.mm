@@ -210,6 +210,11 @@ void OsxWindow::RemoveCurrent()
     [NSOpenGLContext clearCurrentContext];
 }
 
+void OsxWindow::RemoveCurrent()
+{
+    std::cerr << "OsxWindow::RemoveCurrent() not implemented" << std::endl;
+}
+
 void OsxWindow::SwapBuffers()
 {
     [[view openGLContext] flushBuffer];
