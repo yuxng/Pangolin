@@ -3,6 +3,7 @@ if(BUILD_PANGOLIN_GUI)
     add_subdirectory(HelloPangolin)
     add_subdirectory(HelloPangolinThreads)
     add_subdirectory(SimpleMultiDisplay)
+    add_subdirectory(SimpleMultiDisplayOffscreen)
     add_subdirectory(SimpleDisplayImage)
     add_subdirectory(SimpleScene)
 
