@@ -294,6 +294,8 @@ X11Window::X11Window(
         throw std::runtime_error("Pangolin X11: Failed to create window." );
     }
 
+    XFree(vi);
+
     XStoreName( display->display, win, title.c_str() );
     XMapWindow( display->display, win );
 
