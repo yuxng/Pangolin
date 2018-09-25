@@ -224,7 +224,7 @@ else()
                 # TODO: use "target_link_libraries(${LIBRARY_NAME} PRIVATE OpenGL::OpenGL OpenGL::EGL)" for CMake > 3.10
                 find_package(OpenGL REQUIRED COMPONENTS EGL)
                 list(APPEND USER_INC  ${OPENGL_INCLUDE_DIR} )
-                list(APPEND LINK_LIBS ${OPENGL_LIBRARIES} )
+                list(APPEND LINK_LIBS ${OPENGL_egl_LIBRARY} )
             endif()
             
             if(NOT wayland-client_FOUND AND NOT X11_FOUND)
