@@ -113,7 +113,7 @@ public:
     GLint width;
     GLint height;
     
-private:
+// private:
     // Private copy constructor
     GlTexture(const GlTexture&) {}
 };
@@ -206,7 +206,7 @@ struct PANGOLIN_EXPORT GlBuffer
     GLenum datatype;
     GLuint num_elements;
     GLuint count_per_element;
-private:
+// private:
     GlBuffer(const GlBuffer&) {}
 };
 

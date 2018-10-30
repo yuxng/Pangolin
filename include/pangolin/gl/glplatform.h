@@ -56,7 +56,7 @@
 #endif
 
 #ifdef HAVE_GLEW
-    #include <GL/glew.h>
+    #include </usr/include/GL/glew.h>
 #endif
 
 #ifdef HAVE_GLES

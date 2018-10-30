@@ -1,6 +1,7 @@
 #include <pangolin/display/display_internal.h>
 #include <pangolin/factory/factory_registry.h>
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
 
 namespace pangolin {
 
@@ -24,7 +25,8 @@ private:
     EGLDisplay egl_display;
 
     static constexpr EGLint attribs[] = {
-        EGL_RENDERABLE_TYPE , EGL_OPENGL_BIT,
+        EGL_SURFACE_TYPE,       EGL_PBUFFER_BIT,
+        EGL_RENDERABLE_TYPE,    EGL_OPENGL_BIT,
         EGL_RED_SIZE        , 8,
         EGL_GREEN_SIZE      , 8,
         EGL_BLUE_SIZE       , 8,
@@ -59,7 +61,7 @@ struct HeadlessWindow : public PangolinGl {
 
 EGLDisplayHL::EGLDisplayHL(const int width, const int height) {
     egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if(!egl_display) {
+    if(egl_display == EGL_NO_DISPLAY) {
         std::cerr << "Failed to open EGL display" << std::endl;
     }
 
@@ -67,29 +69,59 @@ EGLDisplayHL::EGLDisplayHL(const int width, const int height) {
     if(eglInitialize(egl_display, &major, &minor)==EGL_FALSE) {
         std::cerr << "EGL init failed" << std::endl;
     }
+    std::cout << "EGL version: " << major << "." << minor << std::endl;
+
+    char const * client_apis = eglQueryString(egl_display, EGL_CLIENT_APIS);
+    if(!client_apis)
+    {
+        std::cerr << "Failed to eglQueryString(display, EGL_CLIENT_APIS)" << std::endl;
+    }
+    std::cout << "Supported client rendering APIs: " << client_apis << std::endl;
+
+    EGLConfig config;
+    EGLint num_config;
+    if(eglChooseConfig(egl_display, attribs, &config, 1, &num_config) == EGL_FALSE)
+    {
+        std::cerr << "Failed to eglChooseConfig" << std::endl;
+    }
+    if(num_config < 1)
+    {
+        std::cerr << "No matching EGL frame buffer configuration" << std::endl;
+    }
 
     if(eglBindAPI(EGL_OPENGL_API)==EGL_FALSE) {
         std::cerr << "EGL bind failed" << std::endl;
     }
 
-    EGLint count;
-    eglGetConfigs(egl_display, nullptr, 0, &count);
+    egl_context = eglCreateContext(egl_display, config, EGL_NO_CONTEXT, NULL);
+    if(egl_context == EGL_NO_CONTEXT)
+    {
+        std::cerr << "Failed to eglCreateContext" << std::endl;
+        EGLint error =  eglGetError();
+        switch(error)
+        {
+        case EGL_BAD_CONFIG:
+            std::cerr << "config is not an EGL frame buffer configuration, or does not support the current rendering API" << std::endl;
+            break;
+        case EGL_BAD_ATTRIBUTE:
+            std::cerr << "attrib_list contains an invalid context attribute or if an attribute is not recognized or out of range" << std::endl;
+            break;
+        default:
+            std::cerr << "Unknown error " << error << std::endl;
+            break;
+        }
+    }
 
-    std::vector<EGLConfig> egl_configs(count);
+    if(eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context) == EGL_FALSE)
+    {
+        std::cerr << "Failed to eglMakeCurrent" << std::endl;
+    }
 
-    EGLint numConfigs;
-    eglChooseConfig(egl_display, attribs, egl_configs.data(), count, &numConfigs);
-
-    egl_context = eglCreateContext(egl_display, egl_configs[0], EGL_NO_CONTEXT, nullptr);
-
-    const EGLint pbufferAttribs[] = {
-        EGL_WIDTH, width,
-        EGL_HEIGHT, height,
-        EGL_NONE,
-    };
-    egl_surface = eglCreatePbufferSurface(egl_display, egl_configs[0],  pbufferAttribs);
-    if (egl_surface == EGL_NO_SURFACE) {
-        std::cerr << "Cannot create EGL surface" << std::endl;
+    GLenum err = glewInit();
+    if (GLEW_OK != err)
+    {
+        std::cerr << "Failed to glewInit\n";
+        fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
     }
 
     // TODO: this should not be required
@@ -103,7 +135,6 @@ EGLDisplayHL::EGLDisplayHL(const int width, const int height) {
     glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)eglGetProcAddress("glFramebufferRenderbufferEXT");
     glDrawBuffers = (PFNGLDRAWBUFFERSPROC)eglGetProcAddress("glDrawBuffers");
     glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSPROC)eglGetProcAddress("glDeleteFramebuffersEXT");
-
 }
 
 EGLDisplayHL::~EGLDisplayHL() {
@@ -117,8 +148,8 @@ void EGLDisplayHL::swap() {
 }
 
 void EGLDisplayHL::makeCurrent() {
-    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
-//    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
+//    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
 }
 
 HeadlessWindow::HeadlessWindow(const int w, const int h) : display(w, h) {
