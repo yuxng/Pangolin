@@ -343,11 +343,9 @@ inline bool GlSlProgram::AddPreprocessedShader(
     const std::string& source_code,
     const std::string& name_for_errors
 ) {
-    std::cout << "before" << std::endl;
     if(!prog) {
         prog = glCreateProgram();
     }
-    std::cout << "after" << std::endl;
 
     GLhandleARB shader = glCreateShader(shader_type);
     const char* source = source_code.c_str();
